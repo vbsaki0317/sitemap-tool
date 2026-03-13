@@ -1,0 +1,1402 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>サイトマップエディター — さかもと腎・泌尿器科クリニック</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700&family=DM+Mono:wght@400;500&display=swap');
+
+  :root {
+    --bg: #F5F3EE;
+    --surface: #FFFFFF;
+    --surface2: #F0EDE6;
+    --border: #DDD9D0;
+    --border2: #C8C4BA;
+    --text: #1A1916;
+    --text2: #6B6860;
+    --text3: #A09D96;
+    --accent: #2563A8;
+    --accent-light: #EBF2FC;
+    --green: #1D7A4E;
+    --green-light: #E8F5EE;
+    --amber: #A05A0A;
+    --amber-light: #FEF3E2;
+    --red: #B03030;
+    --red-light: #FEF0F0;
+    --purple: #6B3FA0;
+    --purple-light: #F3EEFF;
+    --teal: #0D7377;
+    --teal-light: #E5F6F7;
+    --radius: 8px;
+    --shadow: 0 2px 12px rgba(0,0,0,0.08);
+    --shadow-drag: 0 8px 32px rgba(0,0,0,0.18);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Noto Sans JP', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    font-size: 13px;
+  }
+
+  /* ── Header ── */
+  header {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 0 24px;
+    height: 56px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+  .header-left { display: flex; align-items: center; gap: 14px; }
+  .logo {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--accent);
+    letter-spacing: -0.01em;
+  }
+  .logo span { color: var(--text); font-weight: 300; }
+  .header-divider { width: 1px; height: 20px; background: var(--border); }
+
+  .stats { display: flex; gap: 16px; }
+  .stat { display: flex; align-items: center; gap: 6px; }
+  .stat-num {
+    font-family: 'DM Mono', monospace;
+    font-size: 20px;
+    font-weight: 500;
+    color: var(--text);
+    line-height: 1;
+  }
+  .stat-label { font-size: 11px; color: var(--text2); line-height: 1.3; }
+  .stat-unit { font-size: 11px; color: var(--text3); align-self: flex-end; padding-bottom: 2px; }
+
+  .range-badge {
+    padding: 3px 10px;
+    border-radius: 99px;
+    font-size: 11px;
+    font-weight: 500;
+    background: var(--green-light);
+    color: var(--green);
+    border: 1px solid #A8D8BC;
+    transition: all 0.3s;
+  }
+  .range-badge.warn { background: var(--amber-light); color: var(--amber); border-color: #F0C070; }
+  .range-badge.over { background: var(--red-light); color: var(--red); border-color: #F0A0A0; }
+
+  .header-right { display: flex; gap: 8px; align-items: center; }
+  .btn {
+    padding: 7px 14px;
+    border-radius: var(--radius);
+    font-size: 12px;
+    font-weight: 500;
+    border: none;
+    cursor: pointer;
+    font-family: inherit;
+    transition: all 0.15s;
+    white-space: nowrap;
+  }
+  .btn-ghost {
+    background: transparent;
+    color: var(--text2);
+    border: 1px solid var(--border);
+  }
+  .btn-ghost:hover { background: var(--surface2); color: var(--text); }
+  .btn-primary {
+    background: var(--accent);
+    color: white;
+  }
+  .btn-primary:hover { background: #1a4f8c; }
+
+  /* ── Main layout ── */
+  .app { display: flex; height: calc(100vh - 56px); }
+
+  /* ── Sidebar ── */
+  .sidebar {
+    width: 240px;
+    min-width: 240px;
+    background: var(--surface);
+    border-right: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto;
+  }
+  .sidebar-section { padding: 16px; border-bottom: 1px solid var(--border); }
+  .sidebar-title { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; color: var(--text3); margin-bottom: 10px; }
+
+  .type-list { display: flex; flex-direction: column; gap: 4px; }
+  .type-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 7px 9px;
+    border-radius: var(--radius);
+    cursor: grab;
+    border: 1px solid transparent;
+    transition: all 0.15s;
+    user-select: none;
+  }
+  .type-item:hover { background: var(--surface2); border-color: var(--border); }
+  .type-item:active { cursor: grabbing; }
+  .type-dot { width: 8px; height: 8px; border-radius: 2px; flex-shrink: 0; }
+  .type-name { font-size: 12px; color: var(--text); }
+  .type-desc { font-size: 10px; color: var(--text3); }
+
+  /* type colors */
+  .t-basic .type-dot { background: var(--border2); }
+  .t-anchor .type-dot { background: var(--amber); }
+  .t-blog .type-dot { background: var(--green); }
+  .t-top .type-dot { background: var(--accent); }
+  .t-new .type-dot { background: var(--purple); }
+  .t-external .type-dot { background: var(--teal); }
+
+  /* Colors for page cards */
+  .page-basic { border-left: 3px solid var(--border2); background: var(--surface); }
+  .page-anchor { border-left: 3px solid var(--amber); background: var(--amber-light); }
+  .page-blog { border-left: 3px solid var(--green); background: var(--green-light); }
+  .page-top { border-left: 3px solid var(--accent); background: var(--accent-light); }
+  .page-new { border-left: 3px solid var(--purple); background: var(--purple-light); }
+  .page-external { border-left: 3px solid var(--teal); background: var(--teal-light); }
+
+  .tag-basic { background: var(--surface2); color: var(--text2); border: 1px solid var(--border); }
+  .tag-anchor { background: var(--amber-light); color: var(--amber); border: 1px solid #F0C070; }
+  .tag-blog { background: var(--green-light); color: var(--green); border: 1px solid #A8D8BC; }
+  .tag-top { background: var(--accent-light); color: var(--accent); border: 1px solid #B0CEEC; }
+  .tag-new { background: var(--purple-light); color: var(--purple); border: 1px solid #C8A8E8; }
+  .tag-external { background: var(--teal-light); color: var(--teal); border: 1px solid #8DCED0; }
+
+  /* counts: anchor = 0 toward basic count */
+  .sidebar-counts { display: flex; flex-direction: column; gap: 6px; }
+  .count-row-sb { display: flex; justify-content: space-between; align-items: center; }
+  .count-label-sb { font-size: 11px; color: var(--text2); display: flex; align-items: center; gap: 6px; }
+  .count-num-sb {
+    font-family: 'DM Mono', monospace;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text);
+  }
+  .count-dot { width: 8px; height: 8px; border-radius: 2px; display: inline-block; }
+
+  /* ── Canvas ── */
+  .canvas { flex: 1; overflow-y: auto; padding: 24px; }
+  .columns { display: flex; gap: 16px; align-items: flex-start; min-height: 100%; }
+
+  /* ── Column ── */
+  .column {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    min-width: 200px;
+    width: 200px;
+    flex-shrink: 0;
+    overflow: hidden;
+    transition: box-shadow 0.2s;
+  }
+  .column.drag-over { box-shadow: 0 0 0 2px var(--accent), var(--shadow); }
+
+  .col-header {
+    padding: 12px 14px 10px;
+    background: var(--surface2);
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    cursor: grab;
+  }
+  .col-header:active { cursor: grabbing; }
+  .col-title-wrap { display: flex; align-items: center; gap: 6px; flex: 1; min-width: 0; }
+  .col-title-input {
+    font-family: 'Noto Sans JP', sans-serif;
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--text);
+    background: transparent;
+    border: none;
+    outline: none;
+    width: 100%;
+    cursor: text;
+  }
+  .col-count {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    color: var(--text3);
+    white-space: nowrap;
+  }
+  .col-actions { display: flex; gap: 2px; }
+  .icon-btn {
+    width: 22px;
+    height: 22px;
+    border: none;
+    background: transparent;
+    border-radius: 4px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--text3);
+    transition: all 0.1s;
+    font-size: 12px;
+  }
+  .icon-btn:hover { background: var(--border); color: var(--text); }
+
+  .col-body { padding: 10px; min-height: 80px; display: flex; flex-direction: column; gap: 6px; }
+
+  /* ── Page Card ── */
+  .page-card {
+    border-radius: 6px;
+    padding: 8px 10px;
+    cursor: grab;
+    transition: box-shadow 0.15s, transform 0.15s;
+    position: relative;
+    border: 1px solid transparent;
+  }
+  .page-card:hover { box-shadow: var(--shadow); }
+  .page-card:active { cursor: grabbing; }
+  .page-card.dragging { opacity: 0.4; }
+  .page-card.drag-over-top { border-top: 2px solid var(--accent); }
+  .page-card.drag-over-bottom { border-bottom: 2px solid var(--accent); }
+
+  .card-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 6px; }
+  .card-name { font-size: 12px; font-weight: 500; color: var(--text); flex: 1; line-height: 1.4; }
+  .card-type-badge {
+    font-size: 9px;
+    padding: 1px 6px;
+    border-radius: 99px;
+    white-space: nowrap;
+    font-weight: 500;
+    flex-shrink: 0;
+  }
+  .card-desc { font-size: 10px; color: var(--text2); margin-top: 4px; line-height: 1.5; }
+  .card-actions {
+    display: none;
+    position: absolute;
+    top: 6px;
+    right: 6px;
+    gap: 2px;
+  }
+  .page-card:hover .card-actions { display: flex; }
+
+  /* Drop indicator placeholder */
+  .drop-placeholder {
+    border: 2px dashed var(--accent);
+    border-radius: 6px;
+    height: 36px;
+    background: var(--accent-light);
+    opacity: 0.6;
+  }
+
+  /* ── Add column button ── */
+  .add-col-btn {
+    min-width: 160px;
+    height: 64px;
+    border: 2px dashed var(--border2);
+    border-radius: 12px;
+    background: transparent;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    color: var(--text3);
+    font-family: 'Noto Sans JP', sans-serif;
+    font-size: 12px;
+    transition: all 0.15s;
+    flex-shrink: 0;
+    align-self: flex-start;
+    margin-top: 0;
+  }
+  .add-col-btn:hover { background: var(--surface); border-color: var(--accent); color: var(--accent); }
+
+  /* ── TOP Section Builder ── */
+  .top-section {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: var(--surface);
+    border-top: 1px solid var(--border);
+    z-index: 90;
+    transition: transform 0.3s ease;
+  }
+  .top-section.collapsed { transform: translateY(calc(100% - 44px)); }
+
+  .top-section-header {
+    height: 44px;
+    padding: 0 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    cursor: pointer;
+    user-select: none;
+  }
+  .top-section-title {
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--text);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .top-badge {
+    font-size: 10px;
+    padding: 2px 8px;
+    border-radius: 99px;
+    background: var(--accent-light);
+    color: var(--accent);
+    border: 1px solid #B0CEEC;
+    font-weight: 500;
+  }
+
+  .top-body { padding: 12px 24px 16px; overflow-x: auto; }
+  .top-flow { display: flex; gap: 0; align-items: stretch; }
+  .top-block {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    position: relative;
+  }
+  .top-card {
+    border-radius: 6px;
+    padding: 8px 12px;
+    min-width: 140px;
+    max-width: 160px;
+    text-align: center;
+    border: 1px solid var(--border);
+    background: var(--surface);
+    cursor: grab;
+    position: relative;
+    transition: box-shadow 0.15s;
+  }
+  .top-card:hover { box-shadow: var(--shadow); }
+  .top-card.dragging { opacity: 0.4; }
+  .top-card-num {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    color: var(--text3);
+    margin-bottom: 3px;
+  }
+  .top-card-name { font-size: 11px; font-weight: 500; color: var(--text); line-height: 1.4; }
+  .top-card-desc { font-size: 9px; color: var(--text2); margin-top: 3px; line-height: 1.5; }
+  .top-card-actions {
+    display: none;
+    position: absolute;
+    top: 4px; right: 4px;
+    gap: 1px;
+  }
+  .top-card:hover .top-card-actions { display: flex; }
+
+  .top-arrow {
+    display: flex;
+    align-items: center;
+    padding: 0 2px;
+    color: var(--text3);
+    font-size: 14px;
+    align-self: center;
+  }
+  .top-add-btn {
+    min-width: 80px;
+    height: 70px;
+    border: 2px dashed var(--border2);
+    border-radius: 6px;
+    background: transparent;
+    cursor: pointer;
+    font-size: 11px;
+    color: var(--text3);
+    font-family: inherit;
+    transition: all 0.15s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    align-self: center;
+  }
+  .top-add-btn:hover { background: var(--surface2); border-color: var(--accent); color: var(--accent); }
+
+  /* ── Modal ── */
+  .modal-backdrop {
+    display: none;
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,0.4);
+    z-index: 200;
+    align-items: center;
+    justify-content: center;
+  }
+  .modal-backdrop.open { display: flex; }
+  .modal {
+    background: var(--surface);
+    border-radius: 14px;
+    padding: 24px;
+    width: 380px;
+    box-shadow: var(--shadow-drag);
+  }
+  .modal h3 { font-size: 15px; font-weight: 700; margin-bottom: 16px; }
+  .form-group { margin-bottom: 14px; }
+  .form-label { font-size: 11px; font-weight: 700; color: var(--text2); margin-bottom: 5px; display: block; text-transform: uppercase; letter-spacing: 0.05em; }
+  .form-input, .form-select, .form-textarea {
+    width: 100%;
+    padding: 8px 10px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    font-family: 'Noto Sans JP', sans-serif;
+    font-size: 13px;
+    color: var(--text);
+    background: var(--surface);
+    outline: none;
+    transition: border-color 0.15s;
+  }
+  .form-input:focus, .form-select:focus, .form-textarea:focus { border-color: var(--accent); }
+  .form-textarea { resize: vertical; min-height: 60px; }
+  .modal-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 20px; }
+
+  /* ── Toast ── */
+  .toast {
+    position: fixed;
+    bottom: 60px;
+    left: 50%;
+    transform: translateX(-50%) translateY(10px);
+    background: var(--text);
+    color: white;
+    padding: 8px 18px;
+    border-radius: 99px;
+    font-size: 12px;
+    opacity: 0;
+    transition: all 0.25s;
+    pointer-events: none;
+    z-index: 300;
+  }
+  .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+  /* Bottom padding for fixed panel */
+  .canvas { padding-bottom: 80px; }
+  .app { padding-bottom: 0; }
+</style>
+</head>
+<body>
+
+<!-- Header -->
+<header>
+  <div class="header-left">
+    <div class="logo">SITEMAP <span>Editor</span></div>
+    <div class="header-divider"></div>
+    <div class="stats">
+      <div class="stat">
+        <div class="stat-num" id="count-total">0</div>
+        <div>
+          <div class="stat-label">合計ページ</div>
+          <div class="stat-unit">pages</div>
+        </div>
+      </div>
+      <div style="width:1px;height:28px;background:var(--border);"></div>
+      <div class="stat">
+        <div class="stat-num" id="count-basic" style="color:var(--text2)">0</div>
+        <div><div class="stat-label" style="color:var(--text3)">基本①</div></div>
+      </div>
+      <div class="stat">
+        <div class="stat-num" id="count-blog" style="color:var(--green)">0</div>
+        <div><div class="stat-label" style="color:var(--text3)">ブログ</div></div>
+      </div>
+      <div class="stat">
+        <div class="stat-num" id="count-anchor" style="color:var(--amber)">0</div>
+        <div><div class="stat-label" style="color:var(--text3)">④（除外）</div></div>
+      </div>
+      <span class="range-badge" id="range-badge">20〜30P 範囲内 ✓</span>
+    </div>
+  </div>
+  <div class="header-right">
+    <button class="btn btn-ghost" onclick="exportJSON()">📤 書き出し</button>
+    <button class="btn btn-ghost" onclick="importJSON()">📥 読み込み</button>
+    <button class="btn btn-primary" onclick="openAddPage(null, null)">＋ ページ追加</button>
+  </div>
+</header>
+
+<!-- App -->
+<div class="app">
+  <!-- Sidebar -->
+  <aside class="sidebar">
+    <div class="sidebar-section">
+      <div class="sidebar-title">ページ種別（ドラッグで追加）</div>
+      <div class="type-list">
+        <div class="type-item t-basic" draggable="true" data-type="basic" ondragstart="sidebarDragStart(event,'basic')">
+          <div class="type-dot"></div>
+          <div>
+            <div class="type-name">基本ページ ①</div>
+            <div class="type-desc">カウント対象</div>
+          </div>
+        </div>
+        <div class="type-item t-top" draggable="true" data-type="top" ondragstart="sidebarDragStart(event,'top')">
+          <div class="type-dot"></div>
+          <div>
+            <div class="type-name">TOPページ</div>
+            <div class="type-desc">カウント対象</div>
+          </div>
+        </div>
+        <div class="type-item t-anchor" draggable="true" data-type="anchor" ondragstart="sidebarDragStart(event,'anchor')">
+          <div class="type-dot"></div>
+          <div>
+            <div class="type-name">ページ内リンク ④</div>
+            <div class="type-desc">カウント除外</div>
+          </div>
+        </div>
+        <div class="type-item t-blog" draggable="true" data-type="blog" ondragstart="sidebarDragStart(event,'blog')">
+          <div class="type-dot"></div>
+          <div>
+            <div class="type-name">ブログ</div>
+            <div class="type-desc">カウント対象</div>
+          </div>
+        </div>
+        <div class="type-item t-new" draggable="true" data-type="new" ondragstart="sidebarDragStart(event,'new')">
+          <div class="type-dot"></div>
+          <div>
+            <div class="type-name">新規追加提案</div>
+            <div class="type-desc">カウント対象</div>
+          </div>
+        </div>
+        <div class="type-item t-external" draggable="true" data-type="external" ondragstart="sidebarDragStart(event,'external')">
+          <div class="type-dot"></div>
+          <div>
+            <div class="type-name">外部リンク</div>
+            <div class="type-desc">カウント除外</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="sidebar-section">
+      <div class="sidebar-title">カウント内訳</div>
+      <div class="sidebar-counts">
+        <div class="count-row-sb">
+          <div class="count-label-sb"><span class="count-dot" style="background:var(--border2)"></span>基本ページ</div>
+          <div class="count-num-sb" id="sb-basic">0</div>
+        </div>
+        <div class="count-row-sb">
+          <div class="count-label-sb"><span class="count-dot" style="background:var(--accent)"></span>TOPページ</div>
+          <div class="count-num-sb" id="sb-top">0</div>
+        </div>
+        <div class="count-row-sb">
+          <div class="count-label-sb"><span class="count-dot" style="background:var(--green)"></span>ブログ</div>
+          <div class="count-num-sb" id="sb-blog">0</div>
+        </div>
+        <div class="count-row-sb">
+          <div class="count-label-sb"><span class="count-dot" style="background:var(--purple)"></span>新規追加</div>
+          <div class="count-num-sb" id="sb-new">0</div>
+        </div>
+        <div class="count-row-sb" style="border-top:1px solid var(--border);padding-top:6px;margin-top:4px;">
+          <div class="count-label-sb" style="font-weight:700;color:var(--text)">合計</div>
+          <div class="count-num-sb" id="sb-total" style="color:var(--text)">0</div>
+        </div>
+        <div class="count-row-sb" style="opacity:0.6">
+          <div class="count-label-sb"><span class="count-dot" style="background:var(--amber)"></span>④除外</div>
+          <div class="count-num-sb" id="sb-anchor">0</div>
+        </div>
+        <div class="count-row-sb" style="opacity:0.6">
+          <div class="count-label-sb"><span class="count-dot" style="background:var(--teal)"></span>外部リンク</div>
+          <div class="count-num-sb" id="sb-external">0</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="sidebar-section" style="flex:1">
+      <div class="sidebar-title">操作方法</div>
+      <div style="font-size:11px;color:var(--text2);line-height:1.8;">
+        🖱 カード → ドラッグで移動<br>
+        ✏️ カードをクリック → 編集<br>
+        ＋ 列ヘッダ → ページ追加<br>
+        🗑 カードホバー → 削除<br>
+        列ヘッダをドラッグ → 列移動
+      </div>
+    </div>
+  </aside>
+
+  <!-- Canvas -->
+  <main class="canvas" id="canvas">
+    <div class="columns" id="columns-wrap">
+      <!-- Columns rendered by JS -->
+      <button class="add-col-btn" onclick="addColumn()">
+        ＋ 列を追加
+      </button>
+    </div>
+  </main>
+</div>
+
+<!-- TOP Page Section -->
+<div class="top-section collapsed" id="top-section">
+  <div class="top-section-header" onclick="toggleTopSection()">
+    <div class="top-section-title">
+      <span>▲ TOP ページ構成</span>
+      <span class="top-badge" id="top-count-badge">10 セクション</span>
+    </div>
+    <div style="font-size:11px;color:var(--text3)">クリックで展開 / 折りたたみ</div>
+  </div>
+  <div class="top-body">
+    <div class="top-flow" id="top-flow">
+      <!-- rendered by JS -->
+    </div>
+  </div>
+</div>
+
+<!-- Modal -->
+<div class="modal-backdrop" id="modal" onclick="closeModal(event)">
+  <div class="modal" onclick="e => e.stopPropagation()">
+    <h3 id="modal-title">ページを追加</h3>
+    <div class="form-group">
+      <label class="form-label">ページ名</label>
+      <input class="form-input" id="f-name" placeholder="例：初診の方へ">
+    </div>
+    <div class="form-group">
+      <label class="form-label">種別</label>
+      <select class="form-select" id="f-type">
+        <option value="basic">基本ページ ①</option>
+        <option value="top">TOPページ</option>
+        <option value="anchor">ページ内リンク ④</option>
+        <option value="blog">ブログ</option>
+        <option value="new">新規追加提案</option>
+        <option value="external">外部リンク</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label class="form-label">メモ・説明</label>
+      <textarea class="form-textarea" id="f-desc" placeholder="例：受診の流れ、持ち物、Q&A"></textarea>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeModalDirect()">キャンセル</button>
+      <button class="btn btn-primary" id="modal-submit" onclick="submitPage()">追加</button>
+    </div>
+  </div>
+</div>
+
+<!-- Top section modal -->
+<div class="modal-backdrop" id="top-modal" onclick="closeTopModal(event)">
+  <div class="modal" onclick="e => e.stopPropagation()">
+    <h3 id="top-modal-title">TOPセクションを追加</h3>
+    <div class="form-group">
+      <label class="form-label">セクション名</label>
+      <input class="form-input" id="tf-name" placeholder="例：当院の特徴">
+    </div>
+    <div class="form-group">
+      <label class="form-label">説明</label>
+      <textarea class="form-textarea" id="tf-desc" placeholder="例：アイコン＋見出し＋短い説明文"></textarea>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeTopModalDirect()">キャンセル</button>
+      <button class="btn btn-primary" id="top-modal-submit" onclick="submitTopSection()">追加</button>
+    </div>
+  </div>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<script>
+// ═══════════════════════════════════════════════════════
+// DATA
+// ═══════════════════════════════════════════════════════
+let data = {
+  columns: [
+    {
+      id: 'col-1', title: 'クリニック情報',
+      pages: [
+        { id: 'p-1', name: 'ホーム（TOP）', type: 'top', desc: 'キャッチコピー・特徴・診療案内・アクセス' },
+        { id: 'p-2', name: '院長紹介', type: 'basic', desc: '挨拶・経歴・資格・学会' },
+        { id: 'p-3', name: '医院案内', type: 'basic', desc: '概要・特徴・院内・設備・施設基準' },
+        { id: 'p-4', name: '初診の方へ', type: 'basic', desc: '受診の流れ・持ち物・Q&A' },
+        { id: 'p-5', name: 'アクセス', type: 'basic', desc: '地図・診療時間・駐車場・予約方法' },
+        { id: 'p-6', name: 'お知らせ', type: 'basic', desc: '' },
+        { id: 'p-7', name: '料金表', type: 'basic', desc: '自費診療・AGA・美容点滴など' },
+        { id: 'p-8', name: '求人案内', type: 'basic', desc: '' },
+      ]
+    },
+    {
+      id: 'col-2', title: '診療案内',
+      pages: [
+        { id: 'p-9', name: '男性泌尿器科', type: 'basic', desc: '症状・治療概要' },
+        { id: 'p-10', name: '女性泌尿器科', type: 'basic', desc: '症状・治療概要' },
+        { id: 'p-11', name: '小児泌尿器科', type: 'basic', desc: '' },
+        { id: 'p-12', name: '性感染症', type: 'basic', desc: '' },
+        { id: 'p-13', name: '泌尿器科のがん', type: 'basic', desc: '腎・膀胱・前立腺・精巣' },
+        { id: 'p-14', name: '尿失禁', type: 'basic', desc: '' },
+        { id: 'p-15', name: 'ED', type: 'basic', desc: '' },
+      ]
+    },
+    {
+      id: 'col-3', title: '自費・専門外来',
+      pages: [
+        { id: 'p-16', name: 'AGA（薄毛治療）', type: 'basic', desc: '自費・料金含む' },
+        { id: 'p-17', name: '美容点滴', type: 'basic', desc: '' },
+        { id: 'p-18', name: '予防接種', type: 'basic', desc: '' },
+        { id: 'p-19', name: '男性更年期・メンズヘルス', type: 'basic', desc: '' },
+      ]
+    },
+    {
+      id: 'col-4', title: 'お悩みから探す',
+      pages: [
+        { id: 'p-20', name: 'お悩みから探す（一覧）', type: 'basic', desc: '症状別インデックスページ' },
+        { id: 'p-21', name: '院内紹介', type: 'anchor', desc: '医院案内ページ内アンカー' },
+        { id: 'p-22', name: '設備紹介', type: 'anchor', desc: '医院案内ページ内アンカー' },
+        { id: 'p-23', name: '施設基準', type: 'anchor', desc: '医院案内ページ内アンカー' },
+      ]
+    },
+    {
+      id: 'col-5', title: '検査・ブログ',
+      pages: [
+        { id: 'p-24', name: '診療メニュー・検査', type: 'new', desc: '検尿/採血/超音波/内視鏡/専門外来' },
+        { id: 'p-25', name: 'ブログ 一覧', type: 'blog', desc: '疾患情報・健康コラム' },
+        { id: 'p-26', name: 'ブログ 記事（サンプル）', type: 'blog', desc: '記事テンプレート×1' },
+      ]
+    }
+  ],
+  topSections: [
+    { id: 'ts-1', name: 'ファーストビュー', desc: 'キャッチコピー＋予約CTA' },
+    { id: 'ts-2', name: 'お知らせ', desc: '最新情報・3〜5件' },
+    { id: 'ts-3', name: '当院の特徴', desc: '3〜6つ アイコン付き' },
+    { id: 'ts-4', name: 'お悩みから探す', desc: '症状別リンク一覧' },
+    { id: 'ts-5', name: '診療案内', desc: 'メニューカード一覧' },
+    { id: 'ts-6', name: '院長・想い', desc: '院長写真＋メッセージ' },
+    { id: 'ts-7', name: '初診の方へ', desc: '受診ステップ図' },
+    { id: 'ts-8', name: 'ブログ新着', desc: '最新記事 3件' },
+    { id: 'ts-9', name: 'アクセス・診療時間', desc: 'Googleマップ＋時間表' },
+    { id: 'ts-10', name: 'フッター', desc: 'メニュー・電話・予約' },
+  ]
+};
+
+// ═══════════════════════════════════════════════════════
+// DRAG STATE
+// ═══════════════════════════════════════════════════════
+let dragState = null; // { type: 'page'|'column'|'sidebar'|'top', id, sourceColId }
+
+// ═══════════════════════════════════════════════════════
+// IDs
+// ═══════════════════════════════════════════════════════
+let idCounter = 100;
+function uid() { return 'id-' + (++idCounter); }
+
+// ═══════════════════════════════════════════════════════
+// TYPE META
+// ═══════════════════════════════════════════════════════
+const TYPE = {
+  basic:    { label: '①', cls: 'page-basic', badge: 'tag-basic', counted: true },
+  top:      { label: 'TOP', cls: 'page-top', badge: 'tag-top', counted: true },
+  anchor:   { label: '④', cls: 'page-anchor', badge: 'tag-anchor', counted: false },
+  blog:     { label: 'ブログ', cls: 'page-blog', badge: 'tag-blog', counted: true },
+  new:      { label: '新規', cls: 'page-new', badge: 'tag-new', counted: true },
+  external: { label: '外部', cls: 'page-external', badge: 'tag-external', counted: false },
+};
+
+// ═══════════════════════════════════════════════════════
+// RENDER
+// ═══════════════════════════════════════════════════════
+function render() {
+  const wrap = document.getElementById('columns-wrap');
+  const addBtn = wrap.querySelector('.add-col-btn');
+
+  // Remove existing columns
+  wrap.querySelectorAll('.column').forEach(el => el.remove());
+
+  data.columns.forEach(col => {
+    const colEl = createColumn(col);
+    wrap.insertBefore(colEl, addBtn);
+  });
+
+  renderTopFlow();
+  updateCounts();
+}
+
+function createColumn(col) {
+  const div = document.createElement('div');
+  div.className = 'column';
+  div.dataset.id = col.id;
+  div.setAttribute('draggable', false);
+
+  // Count countable pages
+  const counted = col.pages.filter(p => TYPE[p.type]?.counted).length;
+
+  div.innerHTML = `
+    <div class="col-header" draggable="true" data-col-id="${col.id}">
+      <div class="col-title-wrap">
+        <input class="col-title-input" value="${esc(col.title)}" 
+          onchange="renameColumn('${col.id}', this.value)"
+          onclick="event.stopPropagation()"
+          onkeydown="if(event.key==='Enter')this.blur()">
+        <span class="col-count">${counted}P</span>
+      </div>
+      <div class="col-actions">
+        <button class="icon-btn" title="ページ追加" onclick="openAddPage('${col.id}', null)">＋</button>
+        <button class="icon-btn" title="列を削除" onclick="deleteColumn('${col.id}')">🗑</button>
+      </div>
+    </div>
+    <div class="col-body" data-col-id="${col.id}">
+      ${col.pages.map(p => createPageCardHTML(p, col.id)).join('')}
+    </div>
+  `;
+
+  // Column drag events
+  const header = div.querySelector('.col-header');
+  header.addEventListener('dragstart', e => columnDragStart(e, col.id));
+
+  // Drop events on col-body
+  const body = div.querySelector('.col-body');
+  body.addEventListener('dragover', e => colBodyDragOver(e, col.id));
+  body.addEventListener('drop', e => colBodyDrop(e, col.id));
+  body.addEventListener('dragleave', e => colBodyDragLeave(e));
+
+  // Drop events on column (for column reorder)
+  div.addEventListener('dragover', e => colDragOver(e, col.id));
+  div.addEventListener('drop', e => colDrop(e, col.id));
+  div.addEventListener('dragleave', () => div.classList.remove('drag-over'));
+
+  // Page card events
+  div.querySelectorAll('.page-card').forEach(card => {
+    card.addEventListener('dragstart', e => pageDragStart(e, card.dataset.id, col.id));
+    card.addEventListener('dragover', e => cardDragOver(e, card.dataset.id));
+    card.addEventListener('dragleave', e => cardDragLeave(e, card.dataset.id));
+    card.addEventListener('drop', e => cardDrop(e, card.dataset.id, col.id));
+    card.addEventListener('dragend', () => clearDragStyles());
+  });
+
+  return div;
+}
+
+function createPageCardHTML(p, colId) {
+  const t = TYPE[p.type] || TYPE.basic;
+  return `
+    <div class="page-card ${t.cls}" draggable="true" data-id="${p.id}" onclick="openEditPage('${p.id}', '${colId}')">
+      <div class="card-top">
+        <div class="card-name">${esc(p.name)}</div>
+        <div class="card-type-badge ${t.badge}">${t.label}</div>
+      </div>
+      ${p.desc ? `<div class="card-desc">${esc(p.desc)}</div>` : ''}
+      <div class="card-actions">
+        <button class="icon-btn" style="font-size:10px" title="削除" onclick="deletePage('${p.id}','${colId}',event)">🗑</button>
+      </div>
+    </div>
+  `;
+}
+
+function renderTopFlow() {
+  const flow = document.getElementById('top-flow');
+  flow.innerHTML = '';
+
+  data.topSections.forEach((sec, i) => {
+    if (i > 0) {
+      const arrow = document.createElement('div');
+      arrow.className = 'top-arrow';
+      arrow.textContent = '→';
+      flow.appendChild(arrow);
+    }
+
+    const block = document.createElement('div');
+    block.className = 'top-block';
+
+    block.innerHTML = `
+      <div class="top-card" draggable="true" data-id="${sec.id}" onclick="openEditTop('${sec.id}')">
+        <div class="top-card-num">${String(i+1).padStart(2,'0')}</div>
+        <div class="top-card-name">${esc(sec.name)}</div>
+        ${sec.desc ? `<div class="top-card-desc">${esc(sec.desc)}</div>` : ''}
+        <div class="top-card-actions">
+          <button class="icon-btn" style="font-size:10px" title="削除" onclick="deleteTopSection('${sec.id}',event)">🗑</button>
+        </div>
+      </div>
+    `;
+
+    const card = block.querySelector('.top-card');
+    card.addEventListener('dragstart', e => topDragStart(e, sec.id));
+    card.addEventListener('dragover', e => { e.preventDefault(); card.style.outline = '2px solid var(--accent)'; });
+    card.addEventListener('dragleave', () => card.style.outline = '');
+    card.addEventListener('drop', e => topDrop(e, sec.id));
+    card.addEventListener('dragend', () => {
+      document.querySelectorAll('.top-card').forEach(c => c.style.outline = '');
+    });
+
+    flow.appendChild(block);
+  });
+
+  // Add button
+  const addBtn = document.createElement('div');
+  addBtn.className = 'top-arrow';
+  addBtn.innerHTML = `<button class="top-add-btn" onclick="openAddTop()">＋<br>追加</button>`;
+  flow.appendChild(addBtn);
+
+  document.getElementById('top-count-badge').textContent = `${data.topSections.length} セクション`;
+}
+
+// ═══════════════════════════════════════════════════════
+// COUNTS
+// ═══════════════════════════════════════════════════════
+function updateCounts() {
+  const counts = { basic:0, top:0, blog:0, new:0, anchor:0, external:0 };
+  data.columns.forEach(col => col.pages.forEach(p => {
+    counts[p.type] = (counts[p.type] || 0) + 1;
+  }));
+
+  const total = (counts.basic || 0) + (counts.top || 0) + (counts.blog || 0) + (counts.new || 0);
+
+  document.getElementById('count-total').textContent = total;
+  document.getElementById('count-basic').textContent = counts.basic || 0;
+  document.getElementById('count-blog').textContent = counts.blog || 0;
+  document.getElementById('count-anchor').textContent = counts.anchor || 0;
+  document.getElementById('sb-basic').textContent = counts.basic || 0;
+  document.getElementById('sb-top').textContent = counts.top || 0;
+  document.getElementById('sb-blog').textContent = counts.blog || 0;
+  document.getElementById('sb-new').textContent = counts.new || 0;
+  document.getElementById('sb-anchor').textContent = counts.anchor || 0;
+  document.getElementById('sb-external').textContent = counts.external || 0;
+  document.getElementById('sb-total').textContent = total;
+
+  const badge = document.getElementById('range-badge');
+  if (total < 20) {
+    badge.textContent = `${total}P — あと${20-total}P必要`;
+    badge.className = 'range-badge warn';
+  } else if (total > 30) {
+    badge.textContent = `${total}P — ${total-30}P超過`;
+    badge.className = 'range-badge over';
+  } else {
+    badge.textContent = `20〜30P 範囲内 ✓`;
+    badge.className = 'range-badge';
+  }
+
+  // Update column counts
+  document.querySelectorAll('.column').forEach(colEl => {
+    const colId = colEl.dataset.id;
+    const col = data.columns.find(c => c.id === colId);
+    if (!col) return;
+    const cnt = col.pages.filter(p => TYPE[p.type]?.counted).length;
+    const span = colEl.querySelector('.col-count');
+    if (span) span.textContent = cnt + 'P';
+  });
+}
+
+// ═══════════════════════════════════════════════════════
+// COLUMN DRAG (reorder)
+// ═══════════════════════════════════════════════════════
+function columnDragStart(e, colId) {
+  dragState = { type: 'column', id: colId };
+  e.dataTransfer.effectAllowed = 'move';
+  setTimeout(() => {
+    const el = document.querySelector(`.column[data-id="${colId}"]`);
+    if (el) el.style.opacity = '0.4';
+  }, 0);
+}
+
+function colDragOver(e, colId) {
+  if (!dragState || dragState.type !== 'column') return;
+  if (dragState.id === colId) return;
+  e.preventDefault();
+  document.querySelectorAll('.column').forEach(c => c.classList.remove('drag-over'));
+  const el = document.querySelector(`.column[data-id="${colId}"]`);
+  if (el) el.classList.add('drag-over');
+}
+
+function colDrop(e, targetColId) {
+  e.preventDefault();
+  document.querySelectorAll('.column').forEach(c => { c.classList.remove('drag-over'); c.style.opacity=''; });
+  if (!dragState || dragState.type !== 'column') return;
+
+  const fromIdx = data.columns.findIndex(c => c.id === dragState.id);
+  const toIdx   = data.columns.findIndex(c => c.id === targetColId);
+  if (fromIdx < 0 || toIdx < 0 || fromIdx === toIdx) return;
+
+  const [moved] = data.columns.splice(fromIdx, 1);
+  data.columns.splice(toIdx, 0, moved);
+  dragState = null;
+  render();
+}
+
+// ═══════════════════════════════════════════════════════
+// SIDEBAR DRAG → DROP to column
+// ═══════════════════════════════════════════════════════
+function sidebarDragStart(e, type) {
+  dragState = { type: 'sidebar', pageType: type };
+  e.dataTransfer.effectAllowed = 'copy';
+}
+
+// ═══════════════════════════════════════════════════════
+// PAGE DRAG
+// ═══════════════════════════════════════════════════════
+function pageDragStart(e, pageId, colId) {
+  dragState = { type: 'page', id: pageId, sourceColId: colId };
+  e.dataTransfer.effectAllowed = 'move';
+  e.stopPropagation();
+  setTimeout(() => {
+    const el = document.querySelector(`.page-card[data-id="${pageId}"]`);
+    if (el) el.classList.add('dragging');
+  }, 0);
+}
+
+function cardDragOver(e, cardId) {
+  if (!dragState || !['page','sidebar'].includes(dragState.type)) return;
+  e.preventDefault();
+  e.stopPropagation();
+  const el = document.querySelector(`.page-card[data-id="${cardId}"]`);
+  if (!el) return;
+  const rect = el.getBoundingClientRect();
+  const mid = rect.top + rect.height / 2;
+  el.classList.remove('drag-over-top','drag-over-bottom');
+  el.classList.add(e.clientY < mid ? 'drag-over-top' : 'drag-over-bottom');
+}
+
+function cardDragLeave(e, cardId) {
+  const el = document.querySelector(`.page-card[data-id="${cardId}"]`);
+  if (el) el.classList.remove('drag-over-top','drag-over-bottom');
+}
+
+function cardDrop(e, targetCardId, targetColId) {
+  e.preventDefault();
+  e.stopPropagation();
+
+  const targetEl = document.querySelector(`.page-card[data-id="${targetCardId}"]`);
+  const insertBefore = targetEl?.classList.contains('drag-over-top');
+  clearDragStyles();
+
+  const targetCol = data.columns.find(c => c.id === targetColId);
+  if (!targetCol) return;
+  const targetIdx = targetCol.pages.findIndex(p => p.id === targetCardId);
+
+  if (dragState.type === 'sidebar') {
+    const newPage = { id: uid(), name: '新しいページ', type: dragState.pageType, desc: '' };
+    const insertIdx = insertBefore ? targetIdx : targetIdx + 1;
+    targetCol.pages.splice(insertIdx, 0, newPage);
+    dragState = null;
+    render();
+    openEditPage(newPage.id, targetColId);
+    return;
+  }
+
+  if (dragState.type !== 'page') return;
+
+  const srcCol = data.columns.find(c => c.id === dragState.sourceColId);
+  if (!srcCol) return;
+  const pageIdx = srcCol.pages.findIndex(p => p.id === dragState.id);
+  if (pageIdx < 0) return;
+  const [page] = srcCol.pages.splice(pageIdx, 1);
+
+  const newTargetIdx = targetCol.pages.findIndex(p => p.id === targetCardId);
+  const insertIdx = insertBefore ? newTargetIdx : newTargetIdx + 1;
+  targetCol.pages.splice(Math.max(0, insertIdx), 0, page);
+  dragState = null;
+  render();
+}
+
+function colBodyDragOver(e, colId) {
+  if (!dragState || !['page','sidebar'].includes(dragState.type)) return;
+  e.preventDefault();
+  const col = document.querySelector(`.column[data-id="${colId}"]`);
+  if (col) col.classList.add('drag-over');
+}
+
+function colBodyDrop(e, colId) {
+  e.preventDefault();
+  document.querySelectorAll('.column').forEach(c => c.classList.remove('drag-over'));
+  clearDragStyles();
+
+  const targetCol = data.columns.find(c => c.id === colId);
+  if (!targetCol) return;
+
+  if (dragState.type === 'sidebar') {
+    const newPage = { id: uid(), name: '新しいページ', type: dragState.pageType, desc: '' };
+    targetCol.pages.push(newPage);
+    dragState = null;
+    render();
+    openEditPage(newPage.id, colId);
+    return;
+  }
+
+  if (dragState.type !== 'page') return;
+  if (dragState.sourceColId === colId) return;
+
+  const srcCol = data.columns.find(c => c.id === dragState.sourceColId);
+  if (!srcCol) return;
+  const idx = srcCol.pages.findIndex(p => p.id === dragState.id);
+  if (idx < 0) return;
+  const [page] = srcCol.pages.splice(idx, 1);
+  targetCol.pages.push(page);
+  dragState = null;
+  render();
+}
+
+function colBodyDragLeave(e) {
+  document.querySelectorAll('.column').forEach(c => c.classList.remove('drag-over'));
+}
+
+function clearDragStyles() {
+  document.querySelectorAll('.page-card').forEach(el => {
+    el.classList.remove('dragging','drag-over-top','drag-over-bottom');
+  });
+  document.querySelectorAll('.column').forEach(el => {
+    el.classList.remove('drag-over');
+    el.style.opacity = '';
+  });
+}
+
+// ═══════════════════════════════════════════════════════
+// TOP SECTION DRAG
+// ═══════════════════════════════════════════════════════
+function topDragStart(e, secId) {
+  dragState = { type: 'top', id: secId };
+  e.dataTransfer.effectAllowed = 'move';
+  e.stopPropagation();
+}
+
+function topDrop(e, targetId) {
+  e.preventDefault();
+  document.querySelectorAll('.top-card').forEach(c => c.style.outline = '');
+  if (!dragState || dragState.type !== 'top') return;
+  if (dragState.id === targetId) return;
+
+  const fromIdx = data.topSections.findIndex(s => s.id === dragState.id);
+  const toIdx   = data.topSections.findIndex(s => s.id === targetId);
+  if (fromIdx < 0 || toIdx < 0) return;
+  const [moved] = data.topSections.splice(fromIdx, 1);
+  data.topSections.splice(toIdx, 0, moved);
+  dragState = null;
+  renderTopFlow();
+}
+
+// ═══════════════════════════════════════════════════════
+// MODAL – Page
+// ═══════════════════════════════════════════════════════
+let modalMode = null; // { mode: 'add'|'edit', colId, pageId }
+
+function openAddPage(colId, afterPageId) {
+  modalMode = { mode: 'add', colId: colId || data.columns[0]?.id };
+  document.getElementById('modal-title').textContent = 'ページを追加';
+  document.getElementById('modal-submit').textContent = '追加';
+  document.getElementById('f-name').value = '';
+  document.getElementById('f-type').value = 'basic';
+  document.getElementById('f-desc').value = '';
+  document.getElementById('modal').classList.add('open');
+  setTimeout(() => document.getElementById('f-name').focus(), 50);
+}
+
+function openEditPage(pageId, colId) {
+  const col = data.columns.find(c => c.id === colId);
+  const page = col?.pages.find(p => p.id === pageId);
+  if (!page) return;
+  modalMode = { mode: 'edit', colId, pageId };
+  document.getElementById('modal-title').textContent = 'ページを編集';
+  document.getElementById('modal-submit').textContent = '保存';
+  document.getElementById('f-name').value = page.name;
+  document.getElementById('f-type').value = page.type;
+  document.getElementById('f-desc').value = page.desc || '';
+  document.getElementById('modal').classList.add('open');
+  setTimeout(() => document.getElementById('f-name').focus(), 50);
+}
+
+function submitPage() {
+  const name = document.getElementById('f-name').value.trim();
+  const type = document.getElementById('f-type').value;
+  const desc = document.getElementById('f-desc').value.trim();
+  if (!name) { document.getElementById('f-name').focus(); return; }
+
+  if (modalMode.mode === 'add') {
+    const col = data.columns.find(c => c.id === modalMode.colId);
+    if (!col) return;
+    col.pages.push({ id: uid(), name, type, desc });
+    showToast('ページを追加しました');
+  } else {
+    const col = data.columns.find(c => c.id === modalMode.colId);
+    const page = col?.pages.find(p => p.id === modalMode.pageId);
+    if (page) { page.name = name; page.type = type; page.desc = desc; }
+    showToast('保存しました');
+  }
+
+  closeModalDirect();
+  render();
+}
+
+function closeModal(e) {
+  if (e.target === document.getElementById('modal')) closeModalDirect();
+}
+function closeModalDirect() {
+  document.getElementById('modal').classList.remove('open');
+  modalMode = null;
+}
+
+// ═══════════════════════════════════════════════════════
+// MODAL – Top section
+// ═══════════════════════════════════════════════════════
+let topModalMode = null;
+
+function openAddTop() {
+  topModalMode = { mode: 'add' };
+  document.getElementById('top-modal-title').textContent = 'TOPセクションを追加';
+  document.getElementById('top-modal-submit').textContent = '追加';
+  document.getElementById('tf-name').value = '';
+  document.getElementById('tf-desc').value = '';
+  document.getElementById('top-modal').classList.add('open');
+  setTimeout(() => document.getElementById('tf-name').focus(), 50);
+}
+
+function openEditTop(secId) {
+  const sec = data.topSections.find(s => s.id === secId);
+  if (!sec) return;
+  topModalMode = { mode: 'edit', secId };
+  document.getElementById('top-modal-title').textContent = 'セクションを編集';
+  document.getElementById('top-modal-submit').textContent = '保存';
+  document.getElementById('tf-name').value = sec.name;
+  document.getElementById('tf-desc').value = sec.desc || '';
+  document.getElementById('top-modal').classList.add('open');
+  setTimeout(() => document.getElementById('tf-name').focus(), 50);
+}
+
+function submitTopSection() {
+  const name = document.getElementById('tf-name').value.trim();
+  const desc = document.getElementById('tf-desc').value.trim();
+  if (!name) { document.getElementById('tf-name').focus(); return; }
+
+  if (topModalMode.mode === 'add') {
+    data.topSections.push({ id: uid(), name, desc });
+    showToast('セクションを追加しました');
+  } else {
+    const sec = data.topSections.find(s => s.id === topModalMode.secId);
+    if (sec) { sec.name = name; sec.desc = desc; }
+    showToast('保存しました');
+  }
+
+  closeTopModalDirect();
+  renderTopFlow();
+}
+
+function closeTopModal(e) {
+  if (e.target === document.getElementById('top-modal')) closeTopModalDirect();
+}
+function closeTopModalDirect() {
+  document.getElementById('top-modal').classList.remove('open');
+  topModalMode = null;
+}
+
+// ═══════════════════════════════════════════════════════
+// ACTIONS
+// ═══════════════════════════════════════════════════════
+function addColumn() {
+  const col = { id: uid(), title: '新しい列', pages: [] };
+  data.columns.push(col);
+  render();
+  // Focus the title
+  setTimeout(() => {
+    const el = document.querySelector(`.column[data-id="${col.id}"] .col-title-input`);
+    if (el) { el.select(); el.focus(); }
+  }, 50);
+}
+
+function deleteColumn(colId) {
+  const col = data.columns.find(c => c.id === colId);
+  if (!col) return;
+  if (col.pages.length > 0 && !confirm(`「${col.title}」を削除しますか？（${col.pages.length}ページも削除されます）`)) return;
+  data.columns = data.columns.filter(c => c.id !== colId);
+  render();
+  showToast('列を削除しました');
+}
+
+function renameColumn(colId, title) {
+  const col = data.columns.find(c => c.id === colId);
+  if (col) col.title = title;
+  updateCounts();
+}
+
+function deletePage(pageId, colId, e) {
+  e.stopPropagation();
+  const col = data.columns.find(c => c.id === colId);
+  if (!col) return;
+  const page = col.pages.find(p => p.id === pageId);
+  if (!page) return;
+  if (!confirm(`「${page.name}」を削除しますか？`)) return;
+  col.pages = col.pages.filter(p => p.id !== pageId);
+  render();
+  showToast('ページを削除しました');
+}
+
+function deleteTopSection(secId, e) {
+  e.stopPropagation();
+  const sec = data.topSections.find(s => s.id === secId);
+  if (!confirm(`「${sec?.name}」を削除しますか？`)) return;
+  data.topSections = data.topSections.filter(s => s.id !== secId);
+  renderTopFlow();
+}
+
+// ═══════════════════════════════════════════════════════
+// TOP SECTION TOGGLE
+// ═══════════════════════════════════════════════════════
+function toggleTopSection() {
+  const el = document.getElementById('top-section');
+  el.classList.toggle('collapsed');
+}
+
+// ═══════════════════════════════════════════════════════
+// EXPORT / IMPORT
+// ═══════════════════════════════════════════════════════
+function exportJSON() {
+  const json = JSON.stringify(data, null, 2);
+  const blob = new Blob([json], { type: 'application/json' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'sitemap-sakamoto.json';
+  a.click();
+  showToast('書き出しました');
+}
+
+function importJSON() {
+  const input = document.createElement('input');
+  input.type = 'file';
+  input.accept = '.json';
+  input.onchange = e => {
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = ev => {
+      try {
+        const imported = JSON.parse(ev.target.result);
+        if (imported.columns && imported.topSections) {
+          data = imported;
+          render();
+          showToast('読み込みました');
+        } else {
+          alert('フォーマットが正しくありません');
+        }
+      } catch { alert('JSONの解析に失敗しました'); }
+    };
+    reader.readAsText(file);
+  };
+  input.click();
+}
+
+// ═══════════════════════════════════════════════════════
+// UTILS
+// ═══════════════════════════════════════════════════════
+function esc(str) {
+  return String(str || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2000);
+}
+
+// Keyboard shortcuts
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') {
+    closeModalDirect();
+    closeTopModalDirect();
+  }
+  if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') {
+    const modal = document.getElementById('modal');
+    const topModal = document.getElementById('top-modal');
+    if (modal.classList.contains('open')) submitPage();
+    else if (topModal.classList.contains('open')) submitTopSection();
+  }
+});
+
+// ═══════════════════════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════════════════════
+render();
+</script>
+</body>
+</html>
